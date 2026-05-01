@@ -61,7 +61,7 @@ Opening `index.html` directly via `file://` mostly works, but browsers block the
 
 ## How it's deployed
 
-GitHub Pages, auto-deployed on every push to `main` via the workflow in `.github/workflows/pages.yml`.
+GitHub Pages, serving the `main` branch directly (configured under **Settings → Pages → Deploy from a branch**). Any push to `main` is published automatically within a minute or two.
 
 ## Files
 
