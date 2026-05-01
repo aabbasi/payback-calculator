@@ -1,0 +1,194 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Haval H6: Petrol vs HEV Payback Calculator</title>
+
+  <!-- PWA -->
+  <link rel="manifest" href="manifest.json" />
+  <meta name="theme-color" content="#0f172a" />
+  <meta name="description" content="Calculate how long until the Haval H6 HEV premium pays for itself in fuel savings, using live Pakistan petrol prices." />
+
+  <!-- iOS PWA -->
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="H6 Payback" />
+  <link rel="apple-touch-icon" href="apple-touch-icon.png" />
+  <link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+  <link rel="icon" type="image/png" sizes="512x512" href="icon-512.png" />
+
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="app">
+    <header>
+      <h1>Haval H6: Petrol vs HEV</h1>
+      <p class="subtitle">How long until the HEV premium pays for itself?</p>
+    </header>
+
+    <section class="live-data">
+      <div class="price-card">
+        <span class="label">Current Petrol Price (Pakistan)</span>
+        <span class="value" id="petrolPrice">—</span>
+        <span class="meta" id="petrolSource">Fetching latest rate…</span>
+      </div>
+    </section>
+
+    <section class="inputs">
+      <h2>Your Driving</h2>
+      <div class="field">
+        <label for="monthlyKm">Monthly mileage (km)</label>
+        <input type="number" id="monthlyKm" min="0" value="750" />
+        <span class="hint">Average km you drive per month</span>
+      </div>
+
+      <div class="field">
+        <label for="citySplit">City vs Motorway split</label>
+        <div class="slider-row">
+          <span>City</span>
+          <input type="range" id="citySplit" min="0" max="100" value="60" />
+          <span>Motorway</span>
+        </div>
+        <span class="hint" id="splitLabel">60% city / 40% motorway</span>
+      </div>
+
+      <details class="advanced">
+        <summary>Advanced settings (edit prices &amp; fuel economy)</summary>
+
+        <div class="two-col">
+          <div class="field">
+            <label for="petrolPriceInput">Petrol price (PKR/L)</label>
+            <input type="number" id="petrolPriceInput" step="0.01" />
+          </div>
+          <div class="field">
+            <label for="fuelInflation">Annual fuel price change (%)</label>
+            <input type="number" id="fuelInflation" step="0.1" value="8" />
+            <span class="hint">Historical avg for Pakistan</span>
+          </div>
+        </div>
+
+        <h3>Prices (PKR)</h3>
+        <div class="two-col">
+          <div class="field">
+            <label for="priceIce">Haval H6 1.5T Petrol</label>
+            <input type="number" id="priceIce" value="9099000" />
+          </div>
+          <div class="field">
+            <label for="priceHev">Haval H6 HEV</label>
+            <input type="number" id="priceHev" value="11749000" />
+          </div>
+        </div>
+
+        <h3>Fuel economy (km per litre)</h3>
+        <p class="hint">Based on manufacturer specs and real-world owner reports. Override if you have better data.</p>
+        <div class="two-col">
+          <div class="field">
+            <label for="iceCity">Petrol — City</label>
+            <input type="number" id="iceCity" step="0.1" value="9" />
+          </div>
+          <div class="field">
+            <label for="iceHwy">Petrol — Motorway</label>
+            <input type="number" id="iceHwy" step="0.1" value="13" />
+          </div>
+          <div class="field">
+            <label for="hevCity">HEV — City</label>
+            <input type="number" id="hevCity" step="0.1" value="19" />
+          </div>
+          <div class="field">
+            <label for="hevHwy">HEV — Motorway</label>
+            <input type="number" id="hevHwy" step="0.1" value="16" />
+          </div>
+        </div>
+      </details>
+    </section>
+
+    <section class="results" id="results">
+      <h2>Payback Analysis</h2>
+
+      <div class="headline">
+        <div class="headline-card">
+          <span class="label">HEV Premium</span>
+          <span class="value" id="premium">—</span>
+        </div>
+        <div class="headline-card highlight">
+          <span class="label">Blended payback</span>
+          <span class="value" id="paybackYears">—</span>
+          <span class="meta" id="paybackKm">—</span>
+        </div>
+        <div class="headline-card">
+          <span class="label">Monthly fuel savings</span>
+          <span class="value" id="monthlySavings">—</span>
+        </div>
+      </div>
+
+      <div class="scenarios">
+        <h3>Scenario comparison</h3>
+        <table>
+          <thead>
+            <tr>
+              <th>Scenario</th>
+              <th>Monthly fuel — Petrol</th>
+              <th>Monthly fuel — HEV</th>
+              <th>Monthly saving</th>
+              <th>Years to break even</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>100% City</td>
+              <td id="cityIce">—</td>
+              <td id="cityHev">—</td>
+              <td id="citySavings">—</td>
+              <td id="cityPayback">—</td>
+            </tr>
+            <tr>
+              <td>100% Motorway</td>
+              <td id="hwyIce">—</td>
+              <td id="hwyHev">—</td>
+              <td id="hwySavings">—</td>
+              <td id="hwyPayback">—</td>
+            </tr>
+            <tr class="your-mix">
+              <td>Your mix</td>
+              <td id="mixIce">—</td>
+              <td id="mixHev">—</td>
+              <td id="mixSavings">—</td>
+              <td id="mixPayback">—</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="verdict" id="verdict"></div>
+
+      <div class="caveats">
+        <h3>What this calculator does <em>not</em> include</h3>
+        <ul>
+          <li><strong>Battery replacement cost</strong> — typically 8–10 year lifespan, can cost a significant portion of the HEV premium when due.</li>
+          <li><strong>Resale value</strong> — HEVs currently hold value well but tech obsolescence is a real risk.</li>
+          <li><strong>Maintenance differences</strong> — HEV brakes last longer (regenerative braking), but hybrid system servicing can be pricier.</li>
+          <li><strong>Opportunity cost</strong> — the PKR 2.65M premium invested at 15% could outpace fuel savings on low mileage.</li>
+          <li><strong>Feature differences</strong> — the two variants have different spec levels; this is pure fuel-cost math.</li>
+        </ul>
+      </div>
+    </section>
+
+    <footer>
+      <p>Sources: <a href="https://www.pakwheels.com/new-cars/pricelist/haval" target="_blank">PakWheels (prices)</a>, <a href="https://www.brecorder.com/news/40418122" target="_blank">Business Recorder (petrol price)</a>, <a href="https://www.gwmuae.com/Haval/H6Hev" target="_blank">GWM (HEV specs)</a>. All figures editable in Advanced.</p>
+    </footer>
+  </div>
+
+  <script src="app.js"></script>
+  <script>
+    // Register service worker for offline PWA support
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => {
+        navigator.serviceWorker.register('sw.js').catch((err) => {
+          console.warn('Service worker registration failed:', err);
+        });
+      });
+    }
+  </script>
+</body>
+</html>
